@@ -134,9 +134,6 @@ function Titulo({ t, url }: { t: TituloDoc; url: string }) {
             <p className="mt-1.5 font-mono text-[8px] tracking-[0.1em] uppercase text-slate-500">
               Verificar titular
             </p>
-            <p className="mt-0.5 max-w-[120px] font-mono text-[6.5px] leading-tight break-all text-slate-400">
-              {url.replace(/^https:\/\//, "")}
-            </p>
           </div>
         </div>
 
