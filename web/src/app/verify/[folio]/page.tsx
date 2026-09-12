@@ -90,11 +90,22 @@ export default async function VerificarPage({
   const r = await consultar(folio);
   const vendedorValido = vendedor && isAddress(vendedor) ? vendedor : null;
 
-  // El escenario del fraude: el QR declara un vendedor que no es el titular.
+  // Tres situaciones distintas, y la app no debe confundirlas:
+  //  · el QR afirma un vendedor y coincide  → comprobación hecha y superada
+  //  · el QR afirma un vendedor y no coincide → fraude
+  //  · el QR no afirma nada → solo sabemos a quién pertenece el folio, y
+  //    dar luz verde ahí sería avalar una comprobación que no hicimos.
+  const coincide =
+    r.estado === "ok" &&
+    vendedorValido !== null &&
+    vendedorValido.toLowerCase() === r.propietario.toLowerCase();
+
   const impostor =
     r.estado === "ok" &&
     vendedorValido !== null &&
     vendedorValido.toLowerCase() !== r.propietario.toLowerCase();
+
+  const sinReclamo = r.estado === "ok" && vendedorValido === null;
 
   const alarma = r.estado === "inexistente" || impostor;
 
@@ -141,8 +152,8 @@ export default async function VerificarPage({
         </Panel>
       )}
 
-      {r.estado === "ok" && !impostor && (
-        <Panel tono="ok" titulo="Título verificado">
+      {coincide && (
+        <Panel tono="ok" titulo="El vendedor es el titular">
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <Fila k="Titular actual" v={acortar(r.propietario)} mono />
             <Fila k="Dirección" v={r.direccion || "—"} />
@@ -167,11 +178,44 @@ export default async function VerificarPage({
               Ver testimonio en IPFS ↗
             </a>
           )}
-          {vendedorValido && (
-            <p className="mt-4 border-t border-emerald-200 pt-3 text-sm text-emerald-900">
-              La billetera del vendedor coincide con el titular registrado.
-            </p>
+          <p className="mt-4 border-t border-emerald-200 pt-3 text-sm text-emerald-900">
+            La billetera del vendedor coincide con el titular registrado en la cadena.
+          </p>
+        </Panel>
+      )}
+
+      {sinReclamo && (
+        <Panel tono="neutro" titulo="Folio registrado">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+            <Fila k="Titular actual" v={acortar(r.estado === "ok" ? r.propietario : null)} mono />
+            <Fila k="Dirección" v={r.estado === "ok" ? r.direccion || "—" : "—"} />
+            <Fila k="Emitido" v={r.estado === "ok" ? fecha(r.emitidoEn) : "—"} />
+            <Fila
+              k="Traspasos"
+              v={
+                r.estado === "ok"
+                  ? r.traspasos < 0
+                    ? "no disponible"
+                    : `${r.traspasos} · todos notariales`
+                  : "—"
+              }
+            />
+          </dl>
+          {r.estado === "ok" && cidUtilizable(r.cid) && (
+            <a
+              href={urlIpfs(r.cid)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-block font-mono text-xs text-teal-800 underline underline-offset-2 hover:text-teal-600"
+            >
+              Ver testimonio en IPFS ↗
+            </a>
           )}
+          <p className="mt-4 border-t border-slate-200 pt-3 text-sm">
+            <strong>No has verificado quién te lo está vendiendo.</strong> Esto solo
+            confirma a quién pertenece el folio. Pide al vendedor su billetera y
+            compárala con la dirección de arriba.
+          </p>
         </Panel>
       )}
 
