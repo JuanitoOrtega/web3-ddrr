@@ -18,6 +18,9 @@ contract Seed is Script {
         uint256 pk = vm.envUint("PRIVATE_KEY");
         address registroAddr = vm.envAddress("CONTRACT_ADDRESS");
         address propietarioDemo = vm.envAddress("PROPIETARIO_DEMO");
+        // Wallet B: dueña legítima de una propiedad. La necesita para el momento
+        // de la demo en que intenta venderla por fuera y la transacción revierte.
+        address propietarioB = vm.envOr("PROPIETARIO_B", propietarioDemo);
 
         RegistroPropiedad registro = RegistroPropiedad(registroAddr);
 
@@ -57,13 +60,13 @@ contract Seed is Script {
                 console.log("ya existe, se omite:", semillas[i].folioReal);
                 continue;
             }
+            // La de Equipetrol (indice 2) va a la wallet B; el resto a la A.
+            address dueno = i == 2 ? propietarioB : propietarioDemo;
             uint256 tokenId = registro.emitirTitulo(
-                propietarioDemo,
-                semillas[i].folioReal,
-                semillas[i].direccion,
-                semillas[i].cid
+                dueno, semillas[i].folioReal, semillas[i].direccion, semillas[i].cid
             );
             console.log("emitido", semillas[i].folioReal, "-> tokenId", tokenId);
+            console.log("   dueno:", dueno);
         }
         vm.stopBroadcast();
 

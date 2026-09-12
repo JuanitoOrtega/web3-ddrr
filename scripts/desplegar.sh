@@ -44,6 +44,7 @@ echo
 echo "▸ Sembrando las 5 propiedades…"
 CONTRACT_ADDRESS="$ADDR" \
 PROPIETARIO_DEMO="${PROPIETARIO_DEMO:-$DEPLOYER}" \
+  PROPIETARIO_B="${PROPIETARIO_B:-${PROPIETARIO_DEMO:-$DEPLOYER}}" \
   forge script script/Seed.s.sol --rpc-url "$RPC" --broadcast 2>&1 | grep -E "emitido|ya existe|Total" || true
 
 cd ..
