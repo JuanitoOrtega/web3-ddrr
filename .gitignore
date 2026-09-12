@@ -12,3 +12,6 @@ web/out/
 .env*.local
 # sistema
 .DS_Store
+
+# vercel
+.vercel/
