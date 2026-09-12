@@ -8,6 +8,7 @@ import {
   deployBlock,
   acortar,
   urlIpfs,
+  cidUtilizable,
   fecha,
 } from "@/lib/contrato";
 
@@ -156,7 +157,7 @@ export default async function VerificarPage({
             />
             <Fila k="Token" v={`#${r.tokenId}`} mono />
           </dl>
-          {r.cid && (
+          {cidUtilizable(r.cid) && (
             <a
               href={urlIpfs(r.cid)}
               target="_blank"

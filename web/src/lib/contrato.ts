@@ -33,6 +33,14 @@ export function urlIpfs(cid: string) {
   return `https://gateway.pinata.cloud/ipfs/${cid}`;
 }
 
+/** Los CID sembrados son placeholders hasta que se suban los PDF reales.
+ *  Sin esto la demo ofrece un enlace muerto, que es peor que no ofrecer nada. */
+export function cidUtilizable(cid?: string | null): cid is string {
+  if (!cid) return false;
+  if (cid.includes("placeholder")) return false;
+  return cid.length > 20;
+}
+
 export function fecha(ts: bigint) {
   if (!ts) return "—";
   return new Date(Number(ts) * 1000).toLocaleDateString("es-BO", {
