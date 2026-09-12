@@ -13,7 +13,9 @@ remappings = [
 ]
 
 [rpc_endpoints]
-base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+fuji = "${FUJI_RPC_URL}"
 
+# Snowtrace corre sobre Routescan: la API es compatible con Etherscan y la
+# key es el literal "verifyContract", no un token personal.
 [etherscan]
-base_sepolia = { key = "${BASESCAN_API_KEY}", chain = 84532 }
+fuji = { key = "verifyContract", chain = 43113, url = "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan" }

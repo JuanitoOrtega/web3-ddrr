@@ -1,5 +1,5 @@
 import { createPublicClient, http, type Address } from "viem";
-import { baseSepolia } from "viem/chains";
+import { avalancheFuji } from "viem/chains";
 import { registroAbi } from "./abi";
 
 export { registroAbi };
@@ -7,16 +7,17 @@ export { registroAbi };
 export const contratoAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ??
   "0x0000000000000000000000000000000000000000") as Address;
 
-export const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL ?? "https://sepolia.base.org";
+export const rpcUrl =
+  process.env.NEXT_PUBLIC_RPC_URL ?? "https://api.avax-test.network/ext/bc/C/rpc";
 
 /** Bloque del deploy: acota getLogs para no barrer la cadena entera. */
 export const deployBlock = BigInt(process.env.NEXT_PUBLIC_DEPLOY_BLOCK ?? "0");
 
-export const chain = baseSepolia;
+export const chain = avalancheFuji;
 
 /** Cliente de solo lectura. No necesita wallet: verificar es gratis. */
 export const publicClient = createPublicClient({
-  chain: baseSepolia,
+  chain: avalancheFuji,
   transport: http(rpcUrl),
 });
 

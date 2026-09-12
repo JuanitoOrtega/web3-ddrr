@@ -1,13 +1,13 @@
 import { createConfig, http } from "wagmi";
-import { baseSepolia } from "wagmi/chains";
+import { avalancheFuji } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
 import { rpcUrl } from "./contrato";
 
 /** Solo `injected` (Metamask). Sin WalletConnect: un project ID menos que gestionar. */
 export const wagmiConfig = createConfig({
-  chains: [baseSepolia],
+  chains: [avalancheFuji],
   connectors: [injected()],
-  transports: { [baseSepolia.id]: http(rpcUrl) },
+  transports: { [avalancheFuji.id]: http(rpcUrl) },
   ssr: true,
 });
 

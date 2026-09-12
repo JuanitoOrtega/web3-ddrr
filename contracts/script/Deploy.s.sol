@@ -5,7 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {RegistroPropiedad} from "../src/RegistroPropiedad.sol";
 
 /// Despliega el registro. El deployer queda como owner y como primer notario.
-///   forge script script/Deploy.s.sol --rpc-url base_sepolia --broadcast --verify
+///   forge script script/Deploy.s.sol --rpc-url fuji --broadcast --verify
 contract Deploy is Script {
     function run() external returns (RegistroPropiedad registro) {
         uint256 pk = vm.envUint("PRIVATE_KEY");
@@ -15,6 +15,7 @@ contract Deploy is Script {
         registro = new RegistroPropiedad(deployer);
         vm.stopBroadcast();
 
+        console.log("Red: Avalanche Fuji (43113)");
         console.log("RegistroPropiedad:", address(registro));
         console.log("Owner / notario 0:", deployer);
         console.log("");

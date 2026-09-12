@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { baseSepolia } from "wagmi/chains";
+import { avalancheFuji } from "wagmi/chains";
 import {
   useAccount,
   useConnect,
@@ -29,7 +29,7 @@ export default function NotarioPage() {
     query: { enabled: Boolean(address) && contratoConfigurado },
   });
 
-  const redIncorrecta = isConnected && chainId !== baseSepolia.id;
+  const redIncorrecta = isConnected && chainId !== avalancheFuji.id;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -90,10 +90,10 @@ export default function NotarioPage() {
         <Aviso tono="alerta">
           Estás en otra red.{" "}
           <button
-            onClick={() => switchChain({ chainId: baseSepolia.id })}
+            onClick={() => switchChain({ chainId: avalancheFuji.id })}
             className="font-semibold underline"
           >
-            Cambiar a Base Sepolia
+            Cambiar a Avalanche Fuji
           </button>
         </Aviso>
       )}
@@ -278,12 +278,12 @@ function Resultado({
       <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
         <p className="font-semibold">{exito}</p>
         <a
-          href={`https://sepolia.basescan.org/tx/${hash}`}
+          href={`https://testnet.snowtrace.io/tx/${hash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-1 inline-block font-mono text-xs underline"
         >
-          Ver en Basescan ↗
+          Ver en Snowtrace ↗
         </a>
       </div>
     );

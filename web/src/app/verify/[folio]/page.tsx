@@ -175,7 +175,7 @@ export default async function VerificarPage({
       )}
 
       <p className="mt-8 text-sm text-slate-500">
-        Consulta leída directamente de Base Sepolia. Gratuita, sin billetera y sin
+        Consulta leída directamente de Avalanche Fuji. Gratuita, sin billetera y sin
         intermediarios.
       </p>
 

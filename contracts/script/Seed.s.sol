@@ -6,7 +6,7 @@ import {RegistroPropiedad} from "../src/RegistroPropiedad.sol";
 
 /// Siembra el estado de la demo en un comando. Si algo explota a las 3am,
 /// esto reconstruye las 5 propiedades en 30 segundos.
-///   forge script script/Seed.s.sol --rpc-url base_sepolia --broadcast
+///   forge script script/Seed.s.sol --rpc-url fuji --broadcast
 contract Seed is Script {
     struct Semilla {
         string folioReal;

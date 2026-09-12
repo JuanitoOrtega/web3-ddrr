@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
       <p className="font-mono text-xs uppercase tracking-[0.18em] text-teal-700">
-        Registro DDRR · Base Sepolia
+        Registro DDRR · Avalanche Fuji
       </p>
       <h1 className="mt-4 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
         Verifica quién es el dueño{" "}
