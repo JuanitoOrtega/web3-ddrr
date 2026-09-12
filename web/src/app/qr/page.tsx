@@ -120,7 +120,7 @@ function Ficha({
     >
       <div className="flex size-[148px] items-center justify-center">
         {url ? (
-          <QRCodeSVG value={url} size={140} level="M" marginSize={1} />
+          <QRCodeSVG value={url} size={140} level="Q" marginSize={2} />
         ) : (
           <span className="text-xs text-slate-400">…</span>
         )}

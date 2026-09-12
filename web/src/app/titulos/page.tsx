@@ -199,7 +199,7 @@ function Titulo({ t, url }: { t: (typeof TITULOS)[number]; url: string }) {
             <p className="font-mono text-2xl font-bold tracking-tight">{t.folio}</p>
           </div>
           <div className="text-center">
-            <QRCodeSVG value={url} size={96} level="M" marginSize={0} />
+            <QRCodeSVG value={url} size={128} level="Q" marginSize={2} />
             <p className="mt-1.5 font-mono text-[8px] tracking-[0.1em] uppercase text-slate-500">
               Verificar titular
             </p>
