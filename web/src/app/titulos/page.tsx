@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { isAddress } from "viem";
+import { sitioUrl } from "@/lib/contrato";
 
 /** Los folios deben coincidir con contracts/script/Seed.s.sol */
 const TITULOS = [
@@ -90,9 +91,8 @@ const TITULAR_FALSO = "Ramiro Andrés Peñaranda Ortiz";
 const CI_FALSO = "8901234 LP";
 
 export default function TitulosPage() {
-  const [base, setBase] = useState("");
+  const base = sitioUrl;
   const [estafador, setEstafador] = useState("");
-  useEffect(() => setBase(window.location.origin), []);
 
   const valido = isAddress(estafador);
   const original = TITULOS.find((t) => t.folio === FOLIO_CLONADO)!;
@@ -143,7 +143,7 @@ export default function TitulosPage() {
 
       <div className="mt-10 grid gap-10">
         {TITULOS.map((t) => (
-          <Titulo key={t.folio} t={t} url={base ? `${base}/verify/${t.folio}` : ""} />
+          <Titulo key={t.folio} t={t} url={`${base}/verify/${t.folio}`} />
         ))}
         {valido && (
           <Titulo
@@ -199,9 +199,12 @@ function Titulo({ t, url }: { t: (typeof TITULOS)[number]; url: string }) {
             <p className="font-mono text-2xl font-bold tracking-tight">{t.folio}</p>
           </div>
           <div className="text-center">
-            {url ? <QRCodeSVG value={url} size={96} level="M" marginSize={0} /> : null}
+            <QRCodeSVG value={url} size={96} level="M" marginSize={0} />
             <p className="mt-1.5 font-mono text-[8px] tracking-[0.1em] uppercase text-slate-500">
               Verificar titular
+            </p>
+            <p className="mt-0.5 max-w-[120px] font-mono text-[6.5px] leading-tight break-all text-slate-400">
+              {url.replace(/^https:\/\//, "")}
             </p>
           </div>
         </div>

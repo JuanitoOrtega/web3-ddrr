@@ -15,6 +15,13 @@ export const deployBlock = BigInt(process.env.NEXT_PUBLIC_DEPLOY_BLOCK ?? "0");
 
 export const chain = avalancheFuji;
 
+/** URL pública del sitio. Los QR impresos SIEMPRE deben apuntar aquí: si se
+ *  generasen desde window.location.origin, abrir /titulos en localhost
+ *  produciría códigos que ningún celular puede resolver. */
+export const sitioUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://registro-ddrr.vercel.app"
+).replace(/\/+$/, "");
+
 /** Cliente de solo lectura. No necesita wallet: verificar es gratis. */
 export const publicClient = createPublicClient({
   chain: avalancheFuji,

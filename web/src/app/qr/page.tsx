@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { isAddress } from "viem";
+import { sitioUrl } from "@/lib/contrato";
 
 /** Debe coincidir con contracts/script/Seed.s.sol */
 const PROPIEDADES = [
@@ -17,10 +18,8 @@ const PROPIEDADES = [
 const FOLIO_FRAUDE = "BOL-LP-001234";
 
 export default function QrPage() {
-  const [base, setBase] = useState("");
+  const base = sitioUrl;
   const [estafador, setEstafador] = useState("");
-
-  useEffect(() => setBase(window.location.origin), []);
 
   const estafadorValido = isAddress(estafador);
   const urlFraude = estafadorValido
@@ -79,7 +78,7 @@ export default function QrPage() {
             key={p.folio}
             titulo={p.folio}
             sub={p.dir}
-            url={base ? `${base}/verify/${p.folio}` : ""}
+            url={`${base}/verify/${p.folio}`}
           />
         ))}
         {urlFraude && (
