@@ -12,7 +12,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es-BO">
+    // suppressHydrationWarning: las extensiones del navegador (LanguageTool,
+    // Grammarly, gestores de contraseñas) inyectan atributos en <html> antes de
+    // que React hidrate. No es un fallo nuestro y no afecta al contenido.
+    <html lang="es-BO" suppressHydrationWarning>
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
         <Providers>{children}</Providers>
       </body>
