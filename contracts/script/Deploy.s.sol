@@ -15,7 +15,7 @@ contract Deploy is Script {
         registro = new RegistroPropiedad(deployer);
         vm.stopBroadcast();
 
-        console.log("Red: Avalanche Fuji (43113)");
+        console.log("Chain ID:", block.chainid);
         console.log("RegistroPropiedad:", address(registro));
         console.log("Owner / notario 0:", deployer);
         console.log("");
