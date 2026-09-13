@@ -9,6 +9,7 @@ import {
   useReadContract,
   useReadContracts,
   useWriteContract,
+  useWaitForTransactionReceipt,
   useSwitchChain,
 } from "wagmi";
 import { isAddress, type Address } from "viem";
@@ -177,7 +178,15 @@ function Propiedad({
   comprador: string;
   bloqueado: boolean;
 }) {
-  const { writeContract, isPending, error, reset } = useWriteContract();
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
+
+  // Una venta fraudulenta puede caer en dos momentos distintos: la billetera
+  // se niega al estimar el gas, o la transacción se envía igual y revierte en
+  // la cadena. El segundo caso no llega como error de writeContract: hay que
+  // mirar el recibo.
+  const { data: recibo, isLoading: minando } = useWaitForTransactionReceipt({ hash });
+  const revertidaEnCadena = recibo?.status === "reverted";
+
   const valido = isAddress(comprador);
 
   return (
@@ -195,7 +204,7 @@ function Propiedad({
             args: [duenoActual, comprador as Address, tokenId],
           })
         }
-        disabled={!valido || isPending || bloqueado}
+        disabled={!valido || isPending || minando || bloqueado}
         className="mt-4 w-full rounded-md bg-slate-800 px-4 py-2.5 font-semibold text-white
                    hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
@@ -203,20 +212,35 @@ function Propiedad({
           ? "Bloqueado: eres notario"
           : isPending
             ? "Confirma en la billetera…"
-            : "Vender directamente al comprador"}
+            : minando
+              ? "Enviando…"
+              : "Vender directamente al comprador"}
       </button>
 
-      {error && <Rechazo error={error} onReset={reset} />}
+      {(error || revertidaEnCadena) && (
+        <Rechazo error={error} hash={hash} onReset={reset} />
+      )}
     </section>
   );
 }
 
-/** El contrato revierte con TransferenciaNoAutorizada. Traducimos ese error a
- *  lenguaje llano en vez de volcar el mensaje crudo de la cadena. */
-function Rechazo({ error, onReset }: { error: Error; onReset: () => void }) {
+/** El contrato revierte con TransferenciaNoAutorizada, cuyo selector es
+ *  0xa7be41ab. La billetera lo muestra como un código opaco; aquí se traduce. */
+function Rechazo({
+  error,
+  hash,
+  onReset,
+}: {
+  error: Error | null;
+  hash?: `0x${string}`;
+  onReset: () => void;
+}) {
+  const mensaje = error?.message ?? "";
+  const rechazadoPorUsuario = /user rejected|denied|rechaz/i.test(mensaje);
+  // Sin error de la billetera pero con recibo revertido, el culpable es el
+  // contrato: es el único camino que lleva aquí.
   const bloqueadoPorContrato =
-    /TransferenciaNoAutorizada|reverted|revert/i.test(error.message);
-  const rechazadoPorUsuario = /user rejected|denied|rechaz/i.test(error.message);
+    !error || /TransferenciaNoAutorizada|0xa7be41ab|revert/i.test(mensaje);
 
   if (rechazadoPorUsuario) {
     return (
@@ -244,9 +268,21 @@ function Rechazo({ error, onReset }: { error: Error; onReset: () => void }) {
         </p>
       )}
       <p className="mt-2 font-mono text-[11px] break-all text-red-700/70">
-        {error.message.split("\n")[0].slice(0, 160)}
+        {mensaje
+          ? mensaje.split("\n")[0].slice(0, 160)
+          : "Custom error 0xa7be41ab · TransferenciaNoAutorizada"}
       </p>
-      <button onClick={onReset} className="mt-2 text-xs text-red-900 underline">
+      {hash && (
+        <a
+          href={`https://testnet.snowtrace.io/tx/${hash}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-block font-mono text-xs text-red-900 underline underline-offset-2"
+        >
+          Ver la transacción fallida en Snowtrace ↗
+        </a>
+      )}
+      <button onClick={onReset} className="mt-2 ml-4 text-xs text-red-900 underline">
         Reintentar
       </button>
     </div>
