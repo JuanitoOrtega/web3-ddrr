@@ -29,9 +29,8 @@ export default function VenderPage() {
 
   const redIncorrecta = isConnected && chainId !== avalancheFuji.id;
 
-  // Un notario SÍ puede mover títulos: es su función. Si quien mira esta
-  // página lo es, el botón de venta directa no le sería rechazado — se
-  // ejecutaría. Avisarlo evita mover un título por accidente.
+  // Un notario SÍ puede mover títulos: es su función. Si quien mira esta página
+  // lo es, la venta directa no sería rechazada — se ejecutaría.
   const { data: esNotario } = useReadContract({
     address: contratoAddress,
     abi: registroAbi,
@@ -39,6 +38,26 @@ export default function VenderPage() {
     args: address ? [address] : undefined,
     query: { enabled: Boolean(address) },
   });
+
+  // El intento vive AQUÍ, no dentro de la tarjeta: al confirmar en la billetera
+  // la ventana pierde el foco, la lista se recarga y una tarjeta desmontada se
+  // llevaría consigo el resultado que la demo necesita mostrar.
+  const {
+    writeContract,
+    data: hash,
+    isPending,
+    error: errorEnvio,
+    reset,
+  } = useWriteContract();
+
+  const {
+    data: recibo,
+    isLoading: minando,
+    error: errorRecibo,
+  } = useWaitForTransactionReceipt({ hash });
+
+  const revertida = recibo?.status === "reverted";
+  const rechazado = Boolean(errorEnvio || errorRecibo || revertida);
 
   const { data: consultas } = useReadContracts({
     contracts: TITULOS.map((t) => ({
@@ -65,6 +84,8 @@ export default function VenderPage() {
     if (propietario.toLowerCase() !== address.toLowerCase()) return null;
     return { ...t, tokenId };
   }).filter((x) => x !== null);
+
+  const ocupado = isPending || minando;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -110,18 +131,6 @@ export default function VenderPage() {
 
       {isConnected && !redIncorrecta && (
         <>
-          <label className="mt-6 grid gap-1.5">
-            <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-slate-500">
-              Billetera del comprador
-            </span>
-            <input
-              value={comprador}
-              onChange={(e) => setComprador(e.target.value.trim())}
-              className="rounded-md border border-slate-300 px-3 py-2 font-mono text-sm
-                         focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 focus:outline-none"
-            />
-          </label>
-
           {esNotario && (
             <div className="mt-6 rounded-md border-t-4 border-amber-500 border-amber-200 bg-amber-50 p-4">
               <p className="font-bold text-amber-900">
@@ -138,6 +147,26 @@ export default function VenderPage() {
             </div>
           )}
 
+          {rechazado && (
+            <Rechazo
+              error={errorEnvio ?? errorRecibo}
+              hash={hash}
+              onReset={reset}
+            />
+          )}
+
+          <label className="mt-6 grid gap-1.5">
+            <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-slate-500">
+              Billetera del comprador
+            </span>
+            <input
+              value={comprador}
+              onChange={(e) => setComprador(e.target.value.trim())}
+              className="rounded-md border border-slate-300 px-3 py-2 font-mono text-sm
+                         focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 focus:outline-none"
+            />
+          </label>
+
           {mios.length === 0 ? (
             <p className="mt-6 rounded-md border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600">
               Esta billetera no figura como titular de ninguna propiedad.
@@ -145,15 +174,39 @@ export default function VenderPage() {
           ) : (
             <div className="mt-4 grid gap-4">
               {mios.map((t) => (
-                <Propiedad
+                <section
                   key={t.folio}
-                  folio={t.folio}
-                  direccion={t.ubicacion}
-                  tokenId={t.tokenId}
-                  duenoActual={address as Address}
-                  comprador={comprador}
-                  bloqueado={Boolean(esNotario)}
-                />
+                  className="rounded-md border border-slate-200 bg-white p-5 shadow-sm"
+                >
+                  <p className="font-mono text-lg font-semibold">{t.folio}</p>
+                  <p className="mt-0.5 text-sm text-slate-600">{t.ubicacion}</p>
+                  <p className="mt-1 font-mono text-xs text-slate-400">
+                    Token #{t.tokenId.toString()}
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      reset();
+                      writeContract({
+                        address: contratoAddress,
+                        abi: registroAbi,
+                        functionName: "transferFrom",
+                        args: [address as Address, comprador as Address, t.tokenId],
+                      });
+                    }}
+                    disabled={!isAddress(comprador) || ocupado || Boolean(esNotario)}
+                    className="mt-4 w-full rounded-md bg-slate-800 px-4 py-2.5 font-semibold text-white
+                               hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {esNotario
+                      ? "Bloqueado: eres notario"
+                      : isPending
+                        ? "Confirma en la billetera…"
+                        : minando
+                          ? "Enviando…"
+                          : "Vender directamente al comprador"}
+                  </button>
+                </section>
               ))}
             </div>
           )}
@@ -163,69 +216,10 @@ export default function VenderPage() {
   );
 }
 
-function Propiedad({
-  folio,
-  direccion,
-  tokenId,
-  duenoActual,
-  comprador,
-  bloqueado,
-}: {
-  folio: string;
-  direccion: string;
-  tokenId: bigint;
-  duenoActual: Address;
-  comprador: string;
-  bloqueado: boolean;
-}) {
-  const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
-
-  // Una venta fraudulenta puede caer en dos momentos distintos: la billetera
-  // se niega al estimar el gas, o la transacción se envía igual y revierte en
-  // la cadena. El segundo caso no llega como error de writeContract: hay que
-  // mirar el recibo.
-  const { data: recibo, isLoading: minando } = useWaitForTransactionReceipt({ hash });
-  const revertidaEnCadena = recibo?.status === "reverted";
-
-  const valido = isAddress(comprador);
-
-  return (
-    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="font-mono text-lg font-semibold">{folio}</p>
-      <p className="mt-0.5 text-sm text-slate-600">{direccion}</p>
-      <p className="mt-1 font-mono text-xs text-slate-400">Token #{tokenId.toString()}</p>
-
-      <button
-        onClick={() =>
-          writeContract({
-            address: contratoAddress,
-            abi: registroAbi,
-            functionName: "transferFrom",
-            args: [duenoActual, comprador as Address, tokenId],
-          })
-        }
-        disabled={!valido || isPending || minando || bloqueado}
-        className="mt-4 w-full rounded-md bg-slate-800 px-4 py-2.5 font-semibold text-white
-                   hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {bloqueado
-          ? "Bloqueado: eres notario"
-          : isPending
-            ? "Confirma en la billetera…"
-            : minando
-              ? "Enviando…"
-              : "Vender directamente al comprador"}
-      </button>
-
-      {(error || revertidaEnCadena) && (
-        <Rechazo error={error} hash={hash} onReset={reset} />
-      )}
-    </section>
-  );
-}
-
-/** El contrato revierte con TransferenciaNoAutorizada, cuyo selector es
- *  0xa7be41ab. La billetera lo muestra como un código opaco; aquí se traduce. */
+/** El contrato revierte con TransferenciaNoAutorizada, selector 0xa7be41ab.
+ *  La billetera lo muestra como un código opaco; aquí se traduce. El rechazo
+ *  puede llegar por tres caminos: la billetera se niega al estimar el gas, el
+ *  recibo vuelve revertido, o la espera del recibo falla. */
 function Rechazo({
   error,
   hash,
@@ -236,15 +230,10 @@ function Rechazo({
   onReset: () => void;
 }) {
   const mensaje = error?.message ?? "";
-  const rechazadoPorUsuario = /user rejected|denied|rechaz/i.test(mensaje);
-  // Sin error de la billetera pero con recibo revertido, el culpable es el
-  // contrato: es el único camino que lleva aquí.
-  const bloqueadoPorContrato =
-    !error || /TransferenciaNoAutorizada|0xa7be41ab|revert/i.test(mensaje);
 
-  if (rechazadoPorUsuario) {
+  if (/user rejected|denied|rechaz/i.test(mensaje)) {
     return (
-      <p className="mt-3 text-sm text-slate-500">
+      <p className="mt-6 text-sm text-slate-500">
         Cancelaste la firma.{" "}
         <button onClick={onReset} className="underline">
           Reintentar
@@ -254,38 +243,33 @@ function Rechazo({
   }
 
   return (
-    <div className="mt-4 rounded-md border-t-4 border-red-600 border-red-200 bg-red-50 p-4">
-      <p className="font-bold text-red-900">
-        {bloqueadoPorContrato
-          ? "El contrato rechazó la venta"
-          : "La transacción no se completó"}
+    <div className="mt-6 rounded-md border border-red-200 border-t-4 border-t-red-600 bg-red-50 p-5">
+      <p className="text-lg font-bold text-red-900">El contrato rechazó la venta</p>
+      <p className="mt-2 text-sm text-red-900">
+        Un título de propiedad solo lo mueve un notario autorizado. No es una política
+        de esta página: está escrito en el contrato y nadie puede saltárselo, ni
+        siquiera el dueño.
       </p>
-      {bloqueadoPorContrato && (
-        <p className="mt-1.5 text-sm text-red-900">
-          Un título de propiedad solo lo mueve un notario autorizado. No es una
-          política de esta página: está escrito en el contrato y nadie puede saltárselo,
-          ni siquiera el dueño.
-        </p>
-      )}
-      <p className="mt-2 font-mono text-[11px] break-all text-red-700/70">
+      <p className="mt-3 font-mono text-[11px] break-all text-red-700/70">
         {mensaje
           ? mensaje.split("\n")[0].slice(0, 160)
           : "Custom error 0xa7be41ab · TransferenciaNoAutorizada"}
       </p>
-      {hash && (
-        <a
-          href={`https://testnet.snowtrace.io/tx/${hash}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-2 inline-block font-mono text-xs text-red-900 underline underline-offset-2"
-        >
-          Ver la transacción fallida en Snowtrace ↗
-        </a>
-      )}
-      <button onClick={onReset} className="mt-2 ml-4 text-xs text-red-900 underline">
-        Reintentar
-      </button>
+      <div className="mt-3 flex flex-wrap items-center gap-4">
+        {hash && (
+          <a
+            href={`https://testnet.snowtrace.io/tx/${hash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-xs text-red-900 underline underline-offset-2"
+          >
+            Ver la transacción fallida en Snowtrace ↗
+          </a>
+        )}
+        <button onClick={onReset} className="text-xs text-red-900 underline">
+          Reintentar
+        </button>
+      </div>
     </div>
   );
 }
-
