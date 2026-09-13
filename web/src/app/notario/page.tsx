@@ -73,7 +73,7 @@ export default function NotarioPage() {
             </button>
           </>
         ) : (
-          connectors.map((c) => (
+          conectoresUtiles(connectors).map((c) => (
             <button
               key={c.uid}
               onClick={() => connect({ connector: c })}
@@ -302,6 +302,14 @@ function Resultado({
     );
   }
   return null;
+}
+
+/** wagmi añade solos los monederos que se anuncian por EIP-6963, además del
+ *  conector `injected` genérico que declaramos. Son el mismo monedero: si hay
+ *  alguno descubierto, el genérico sobra y solo confunde. */
+function conectoresUtiles<T extends { id: string }>(cs: readonly T[]): readonly T[] {
+  const descubiertos = cs.filter((c) => c.id !== "injected");
+  return descubiertos.length > 0 ? descubiertos : cs;
 }
 
 function Aviso({

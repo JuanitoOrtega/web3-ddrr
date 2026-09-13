@@ -8,6 +8,7 @@
 | | |
 |---|---|
 | **Demo** | https://registro-ddrr.vercel.app |
+| **Rutas** | `/` · `/verify/<folio>` · `/titulos` · `/vender` · `/notario` |
 | **Contrato** | [`0xdeb63063360B782867375E04194833EC2AdA57CF`](https://testnet.snowtrace.io/address/0xdeb63063360B782867375E04194833EC2AdA57CF) |
 | **Repositorio** | https://github.com/JuanitoOrtega/web3-ddrr |
 | **Red** | Avalanche Fuji C-Chain · 43113 |
@@ -83,8 +84,10 @@ en el pitch.
 | 4 | `BOL-SC-003456` | Barrio Las Palmas, 3er Anillo, Santa Cruz | A |
 | 5 | `BOL-CB-007890` | Av. América 210, Cala Cala, Cochabamba | A |
 
-**El token 3 es el del golpe técnico**: es de Persona B, y es el que intenta
-transferir por fuera para que Metamask lo rechace en vivo.
+**El token 3 es el del golpe técnico.** Persona B lo ve en `/vender` al conectar
+su billetera, y el botón «Vender directamente al comprador» es lo que dispara el
+rechazo. Simulado contra Fuji: revierte con `TransferenciaNoAutorizada(0x7732…)`,
+así que MetaMask avisa de que la transacción va a fallar antes incluso de firmar.
 
 ---
 
@@ -106,7 +109,7 @@ transferir por fuera para que Metamask lo rechace en vivo.
 | 0:00–0:20 | **El gancho.** Sin slides: un caso real de título clonado |
 | 0:20–0:50 | **Verificación honesta.** Escanear título legítimo → 🟢 |
 | 0:50–1:20 | **El fraude.** Persona B presenta el título clonado → 🔴. Tres segundos de silencio |
-| 1:20–1:45 | **El golpe técnico.** Persona B intenta transferir el token 3 → Metamask revierte |
+| 1:20–1:45 | **El golpe técnico.** Persona B entra en `/vender`, conecta su billetera y pulsa «Vender directamente» sobre Equipetrol → el contrato lo rechaza |
 | 1:45–2:00 | **Cierre de negocio.** «No reemplazamos a Derechos Reales» |
 
 ---

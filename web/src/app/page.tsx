@@ -68,9 +68,14 @@ export default function Home() {
       )}
 
       <footer className="mt-16 border-t border-slate-200 pt-6 text-sm text-slate-500">
-        <Link href="/notario" className="font-medium text-teal-800 hover:underline">
-          Panel de notario →
-        </Link>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Link href="/vender" className="font-medium text-teal-800 hover:underline">
+            Mis propiedades →
+          </Link>
+          <Link href="/notario" className="font-medium text-teal-800 hover:underline">
+            Panel de notario →
+          </Link>
+        </div>
       </footer>
     </main>
   );
