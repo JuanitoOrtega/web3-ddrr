@@ -69,10 +69,22 @@ en el pitch.
 
 ### Wallets
 
-| Rol | Dirección |
-|---|---|
-| **A** — notario, deployer y owner | `0x8168ED937C3d5665349eA33B9a1543042eF705a6` |
-| **B** — Persona B, el vendedor falso | `0x7732b8ee0Aa6AB50F508DE371d71296C301D25dd` |
+Las dos viven en **el mismo MetaMask, en el equipo de Juanito**. La demo corre
+desde ese único equipo.
+
+| Cuenta | Rol | Dirección |
+|---|---|---|
+| Account 1 | notario, deployer y owner | `0x8168ED937C3d5665349eA33B9a1543042eF705a6` |
+| **Account 2** | el vendedor falso | `0x7732b8ee0Aa6AB50F508DE371d71296C301D25dd` |
+
+### Puesta a punto antes de subir al escenario
+
+**Deja MetaMask en Account 2 y no la muevas.** Ningún momento de la demo
+necesita Account 1: las pantallas de verificación funcionan sin billetera, y el
+único paso que la pide es el intento de venta, que debe salir de Account 2.
+
+Desde Account 1 ese botón aparece bloqueado, porque es notaria y la venta se
+ejecutaría en vez de ser rechazada.
 
 ### Propiedades
 
@@ -84,8 +96,8 @@ en el pitch.
 | 4 | `BOL-SC-003456` | Barrio Las Palmas, 3er Anillo, Santa Cruz | A |
 | 5 | `BOL-CB-007890` | Av. América 210, Cala Cala, Cochabamba | A |
 
-**El token 3 es el del golpe técnico.** Persona B lo ve en `/vender` al conectar
-su billetera, y el botón «Vender directamente al comprador» es lo que dispara el
+**El token 3 es el del golpe técnico.** Es el único que ve Account 2 en
+`/vender`, y el botón «Vender directamente al comprador» es lo que dispara el
 rechazo. Simulado contra Fuji: revierte con `TransferenciaNoAutorizada(0x7732…)`,
 así que MetaMask avisa de que la transacción va a fallar antes incluso de firmar.
 
@@ -109,7 +121,7 @@ así que MetaMask avisa de que la transacción va a fallar antes incluso de firm
 | 0:00–0:20 | **El gancho.** Sin slides: un caso real de título clonado |
 | 0:20–0:50 | **Verificación honesta.** Escanear título legítimo → 🟢 |
 | 0:50–1:20 | **El fraude.** Persona B presenta el título clonado → 🔴. Tres segundos de silencio |
-| 1:20–1:45 | **El golpe técnico.** Persona B entra en `/vender`, conecta su billetera y pulsa «Vender directamente» sobre Equipetrol → el contrato lo rechaza |
+| 1:20–1:45 | **El golpe técnico.** En `/vender`, con Account 2 ya conectada, pulsar «Vender directamente» sobre Equipetrol → el contrato lo rechaza |
 | 1:45–2:00 | **Cierre de negocio.** «No reemplazamos a Derechos Reales» |
 
 ---
@@ -160,3 +172,8 @@ cd web && pnpm dev
 ```
 
 **Si falla el wifi en el escenario:** el video de respaldo. Por eso se graba.
+
+**Si MetaMask aparece con la cuenta equivocada:** la página lo dice sola. Con
+Account 1 el botón sale bloqueado con un aviso ámbar; con cualquier otra
+billetera, «no figura como titular de ninguna propiedad». Cambiar a Account 2
+en MetaMask y la página se actualiza sola, sin recargar.
