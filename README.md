@@ -19,7 +19,7 @@ Pruébalo sin instalar nada, desde el celular y sin billetera:
 - ⚪ [Sin declarar vendedor](https://registro-ddrr.vercel.app/verify/BOL-LP-001234) — la app avisa de lo que *no* comprobó
 - 🔴 [Folio inexistente](https://registro-ddrr.vercel.app/verify/BOL-XX-999999)
 
-Plan de 48 horas: [docs/GUIA.md](docs/GUIA.md) · Bounty: [docs/avalanche.md](docs/avalanche.md)
+Plan de 48 horas: [docs/guia.md](docs/guia.md) · Bounty: [docs/avalanche.md](docs/avalanche.md)
 
 ```
 contracts/   Foundry · Solidity · OpenZeppelin v5   → Avalanche Fuji (43113)
