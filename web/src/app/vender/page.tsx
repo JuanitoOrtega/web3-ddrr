@@ -6,6 +6,7 @@ import { avalancheFuji } from "wagmi/chains";
 import {
   useAccount,
   useDisconnect,
+  useReadContract,
   useReadContracts,
   useWriteContract,
   useSwitchChain,
@@ -26,6 +27,17 @@ export default function VenderPage() {
   const [comprador, setComprador] = useState(COMPRADOR_DEMO);
 
   const redIncorrecta = isConnected && chainId !== avalancheFuji.id;
+
+  // Un notario SÍ puede mover títulos: es su función. Si quien mira esta
+  // página lo es, el botón de venta directa no le sería rechazado — se
+  // ejecutaría. Avisarlo evita mover un título por accidente.
+  const { data: esNotario } = useReadContract({
+    address: contratoAddress,
+    abi: registroAbi,
+    functionName: "esNotario",
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) },
+  });
 
   const { data: consultas } = useReadContracts({
     contracts: TITULOS.map((t) => ({
@@ -109,6 +121,22 @@ export default function VenderPage() {
             />
           </label>
 
+          {esNotario && (
+            <div className="mt-6 rounded-md border-t-4 border-amber-500 border-amber-200 bg-amber-50 p-4">
+              <p className="font-bold text-amber-900">
+                Esta billetera está autorizada como notaría
+              </p>
+              <p className="mt-1.5 text-sm text-amber-900">
+                Un notario sí puede mover títulos: es su función. Desde aquí la venta
+                directa <strong>no sería rechazada, se ejecutaría</strong>. El botón queda
+                bloqueado para que no ocurra por descuido.
+              </p>
+              <p className="mt-1.5 text-sm text-amber-900/80">
+                El contrato distingue funciones, no personas.
+              </p>
+            </div>
+          )}
+
           {mios.length === 0 ? (
             <p className="mt-6 rounded-md border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600">
               Esta billetera no figura como titular de ninguna propiedad.
@@ -123,6 +151,7 @@ export default function VenderPage() {
                   tokenId={t.tokenId}
                   duenoActual={address as Address}
                   comprador={comprador}
+                  bloqueado={Boolean(esNotario)}
                 />
               ))}
             </div>
@@ -139,12 +168,14 @@ function Propiedad({
   tokenId,
   duenoActual,
   comprador,
+  bloqueado,
 }: {
   folio: string;
   direccion: string;
   tokenId: bigint;
   duenoActual: Address;
   comprador: string;
+  bloqueado: boolean;
 }) {
   const { writeContract, isPending, error, reset } = useWriteContract();
   const valido = isAddress(comprador);
@@ -164,11 +195,15 @@ function Propiedad({
             args: [duenoActual, comprador as Address, tokenId],
           })
         }
-        disabled={!valido || isPending}
+        disabled={!valido || isPending || bloqueado}
         className="mt-4 w-full rounded-md bg-slate-800 px-4 py-2.5 font-semibold text-white
                    hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {isPending ? "Confirma en la billetera…" : "Vender directamente al comprador"}
+        {bloqueado
+          ? "Bloqueado: eres notario"
+          : isPending
+            ? "Confirma en la billetera…"
+            : "Vender directamente al comprador"}
       </button>
 
       {error && <Rechazo error={error} onReset={reset} />}
