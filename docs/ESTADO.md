@@ -171,6 +171,15 @@ cd ~/Courses/web3-ddrr                  # terminal 2
 cd web && pnpm dev
 ```
 
+**Prueba permanente del fraude rechazado.** Un intento real, ya ejecutado y
+registrado en la cadena, que cualquiera puede auditar:
+
+https://testnet.snowtrace.io/tx/0xf7d096e704d7bcf1a115ac129e6d267358c7c2bbee1614650b5187cfd22afe18
+
+Estado: fallida. De la billetera del vendedor falso al contrato, revertida con
+`TransferenciaNoAutorizada`. Sirve como respaldo si el intento en vivo no sale,
+y como respuesta a quien sospeche que la pantalla roja es una animación.
+
 **Si falla el wifi en el escenario:** el video de respaldo. Por eso se graba.
 
 **Si MetaMask aparece con la cuenta equivocada:** la página lo dice sola. Con
