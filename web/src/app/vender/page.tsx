@@ -10,6 +10,7 @@ import {
   useReadContracts,
   useWriteContract,
   useWaitForTransactionReceipt,
+  useSimulateContract,
   useSwitchChain,
 } from "wagmi";
 import { isAddress, type Address } from "viem";
@@ -26,6 +27,9 @@ export default function VenderPage() {
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const [comprador, setComprador] = useState(COMPRADOR_DEMO);
+  // Qué título se intentó vender, para poder reproducir la llamada y obtener
+  // el motivo real del rechazo.
+  const [intento, setIntento] = useState<bigint | null>(null);
 
   const redIncorrecta = isConnected && chainId !== avalancheFuji.id;
 
@@ -58,6 +62,20 @@ export default function VenderPage() {
 
   const revertida = recibo?.status === "reverted";
   const rechazado = Boolean(errorEnvio || errorRecibo || revertida);
+
+  // El recibo de una transacción ya minada no guarda el motivo del revert, así
+  // que viem solo puede decir "unknown reason". Reproducimos la llamada contra
+  // la cadena: ahí sí vuelve el error, y con la ABI se decodifica a su nombre.
+  const { error: errorSimulado } = useSimulateContract({
+    address: contratoAddress,
+    abi: registroAbi,
+    functionName: "transferFrom",
+    args:
+      address && isAddress(comprador) && intento !== null
+        ? [address, comprador as Address, intento]
+        : undefined,
+    query: { enabled: revertida && intento !== null, retry: false },
+  });
 
   const { data: consultas } = useReadContracts({
     contracts: TITULOS.map((t) => ({
@@ -150,6 +168,7 @@ export default function VenderPage() {
           {rechazado && (
             <Rechazo
               error={errorEnvio ?? errorRecibo}
+              motivo={errorSimulado}
               hash={hash}
               onReset={reset}
             />
@@ -187,6 +206,7 @@ export default function VenderPage() {
                   <button
                     onClick={() => {
                       reset();
+                      setIntento(t.tokenId);
                       writeContract({
                         address: contratoAddress,
                         abi: registroAbi,
@@ -222,10 +242,12 @@ export default function VenderPage() {
  *  recibo vuelve revertido, o la espera del recibo falla. */
 function Rechazo({
   error,
+  motivo,
   hash,
   onReset,
 }: {
   error: Error | null;
+  motivo?: Error | null;
   hash?: `0x${string}`;
   onReset: () => void;
 }) {
@@ -251,9 +273,7 @@ function Rechazo({
         siquiera el dueño.
       </p>
       <p className="mt-3 font-mono text-[11px] break-all text-red-700/70">
-        {mensaje
-          ? mensaje.split("\n")[0].slice(0, 160)
-          : "Custom error 0xa7be41ab · TransferenciaNoAutorizada"}
+        {motivoLegible(motivo, mensaje)}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-4">
         {hash && (
@@ -272,4 +292,18 @@ function Rechazo({
       </div>
     </div>
   );
+}
+
+/** Prefiere el nombre del error del contrato sobre el mensaje genérico de la
+ *  librería. "Execution reverted for an unknown reason" no es aceptable cuando
+ *  el motivo se conoce y está proyectado en una pantalla. */
+function motivoLegible(motivo: Error | null | undefined, respaldo: string) {
+  const texto = motivo?.message ?? "";
+  const nombrado = texto.match(/TransferenciaNoAutorizada\([^)]*\)/)?.[0];
+  if (nombrado) return `Revertido por el contrato · ${nombrado}`;
+
+  const util = respaldo && !/unknown reason/i.test(respaldo);
+  if (util) return respaldo.split("\n")[0].slice(0, 160);
+
+  return "Revertido por el contrato · TransferenciaNoAutorizada (0xa7be41ab)";
 }
