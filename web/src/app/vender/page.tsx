@@ -5,7 +5,6 @@ import Link from "next/link";
 import { avalancheFuji } from "wagmi/chains";
 import {
   useAccount,
-  useConnect,
   useDisconnect,
   useReadContracts,
   useWriteContract,
@@ -13,6 +12,7 @@ import {
 } from "wagmi";
 import { isAddress, type Address } from "viem";
 import { registroAbi, contratoAddress, acortar } from "@/lib/contrato";
+import { BotonesConectar } from "@/components/conectar";
 import { TITULOS } from "../titulos/datos";
 
 /** Comprador de la demo: la billetera del notario hace de contraparte.
@@ -21,7 +21,6 @@ const COMPRADOR_DEMO = "0x8168ED937C3d5665349eA33B9a1543042eF705a6";
 
 export default function VenderPage() {
   const { address, isConnected, chainId } = useAccount();
-  const { connect, connectors, isPending: conectando } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const [comprador, setComprador] = useState(COMPRADOR_DEMO);
@@ -80,16 +79,7 @@ export default function VenderPage() {
             </button>
           </>
         ) : (
-          conectoresUtiles(connectors).map((c) => (
-            <button
-              key={c.uid}
-              onClick={() => connect({ connector: c })}
-              disabled={conectando}
-              className="rounded-md bg-teal-800 px-4 py-2 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
-            >
-              {conectando ? "Conectando…" : `Conectar ${c.name}`}
-            </button>
-          ))
+          <BotonesConectar />
         )}
       </div>
 
@@ -228,7 +218,3 @@ function Rechazo({ error, onReset }: { error: Error; onReset: () => void }) {
   );
 }
 
-function conectoresUtiles<T extends { id: string }>(cs: readonly T[]): readonly T[] {
-  const descubiertos = cs.filter((c) => c.id !== "injected");
-  return descubiertos.length > 0 ? descubiertos : cs;
-}

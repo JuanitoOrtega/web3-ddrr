@@ -5,7 +5,6 @@ import Link from "next/link";
 import { avalancheFuji } from "wagmi/chains";
 import {
   useAccount,
-  useConnect,
   useDisconnect,
   useReadContract,
   useWriteContract,
@@ -14,10 +13,10 @@ import {
 } from "wagmi";
 import { isAddress, type Address } from "viem";
 import { registroAbi, contratoAddress, contratoConfigurado, acortar } from "@/lib/contrato";
+import { BotonesConectar } from "@/components/conectar";
 
 export default function NotarioPage() {
   const { address, isConnected, chainId } = useAccount();
-  const { connect, connectors, isPending: conectando } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
 
@@ -73,16 +72,7 @@ export default function NotarioPage() {
             </button>
           </>
         ) : (
-          conectoresUtiles(connectors).map((c) => (
-            <button
-              key={c.uid}
-              onClick={() => connect({ connector: c })}
-              disabled={conectando}
-              className="rounded-md bg-teal-800 px-4 py-2 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
-            >
-              {conectando ? "Conectando…" : `Conectar ${c.name}`}
-            </button>
-          ))
+          <BotonesConectar />
         )}
       </div>
 
@@ -302,14 +292,6 @@ function Resultado({
     );
   }
   return null;
-}
-
-/** wagmi añade solos los monederos que se anuncian por EIP-6963, además del
- *  conector `injected` genérico que declaramos. Son el mismo monedero: si hay
- *  alguno descubierto, el genérico sobra y solo confunde. */
-function conectoresUtiles<T extends { id: string }>(cs: readonly T[]): readonly T[] {
-  const descubiertos = cs.filter((c) => c.id !== "injected");
-  return descubiertos.length > 0 ? descubiertos : cs;
 }
 
 function Aviso({
